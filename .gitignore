@@ -1,0 +1,6 @@
+.*.sw?
+.py?
+MANIFEST
+build
+dist
+fsh

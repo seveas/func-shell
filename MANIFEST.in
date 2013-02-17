@@ -1,0 +1,2 @@
+include fsh.c
+recursive-include examples *.fsh
