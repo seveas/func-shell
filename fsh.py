@@ -285,8 +285,8 @@ class FuncShellGrammar(object):
         num    = int_ | real_
         str_   = pp.quotedString
         self.re_ = re_ = pp.QuotedString(quoteChar='/', escChar='\\')
-        none   = pp.Keyword("None")
-        const  = num | str_ | none
+        singletons = pp.Keyword("None") | pp.Keyword("True") | pp.keyword("False")
+        const  = num | str_ | singletons
         self.ident = ident = pp.Word(pp.srange("[a-zA-Z_]"), pp.srange("[a-zA-Z0-9_]"))
 
         # Combined types
