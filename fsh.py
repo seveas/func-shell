@@ -178,7 +178,11 @@ class FuncShell(object):
         quiet = line[0] == '@' and line.pop(0)
         if len(line) != 3:
             raise RuntimeError("Internal error")
-        args = eval(''.join(line[2])[:-1] + ",)")
+        args = ''.join(line[2])
+        if args == "()":
+            args = tuple()
+        else:
+            args = eval(args[:-1] + ",)")
         return self.run(line[0], line[1], args, quiet)
 
     def run_shell_command(self, line):
