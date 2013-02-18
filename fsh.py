@@ -17,6 +17,12 @@ import struct
 import sys
 import termios
 
+# Support for custom host queries can go in here
+try:
+    import fsh_query
+except ImportError:
+    fsh_query = None
+
 def shell():
     p = optparse.OptionParser(usage="%prog [opts] [scripts]")
     p.add_option('-v', '--verbose', dest="verbose", action="store_true", default=False,
@@ -135,6 +141,10 @@ class FuncShell(object):
 
     def parse_hosts(self, query):
         ret = set()
+        if fsh_query:
+            ret = fsh_query.query(query)
+            if ret is not None:
+                return ret
         if not isinstance(query, str):
             query = ''.join(query)
         if query == '$ok':
@@ -274,13 +284,13 @@ class FuncShellGrammar(object):
         real_  = pp.Combine(int_ + pp.Literal('.') + int_)
         num    = int_ | real_
         str_   = pp.quotedString
-        re_    = pp.QuotedString(quoteChar='/', escChar='\\')
+        self.re_ = re_ = pp.QuotedString(quoteChar='/', escChar='\\')
         none   = pp.Keyword("None")
         const  = num | str_ | none
-        ident  = pp.Word(pp.srange("[a-zA-Z_]"), pp.srange("[a-zA-Z0-9_]"))
+        self.ident = ident = pp.Word(pp.srange("[a-zA-Z_]"), pp.srange("[a-zA-Z0-9_]"))
 
         # Combined types
-        val    = pp.Forward()
+        self.val = val = pp.Forward()
         tuple_ = pp.Literal('(') + pp.Optional(val + pp.ZeroOrMore(pp.Literal(',') + val)) + pp.Literal(')')
         list_  = pp.Literal('[') + pp.Optional(val + pp.ZeroOrMore(pp.Literal(',') + val)) + pp.Literal(']')
         delt   = const + pp.Literal(':') + val
@@ -299,8 +309,10 @@ class FuncShellGrammar(object):
         attr   = pp.Literal('.') + ident
         elt    = pp.Literal('[') + const + pp.Literal(']')
         expr   = pp.Group(pp.Literal('x') + pp.ZeroOrMore(attr|elt) + (pp.Literal('==') + val | pp.Literal('=~') + re_))
-        hostq  = (results | expr | str_ | num | fqdn)
-        self.admin = (pp.oneOf('?') + pp.Optional(hostq) | pp.oneOf('= + -') + hostq) + pp.LineEnd()
+        hostq = (results | expr | str_ | num | fqdn)
+        if fsh_query:
+            hostq = (fsh_query.hostq(self) | results | expr | str_ | num | fqdn)
+        self.admin = (pp.Literal('?') + pp.Optional(hostq) | pp.oneOf('= + -') + hostq) + pp.LineEnd()
 
 is_error = lambda x, module=None, method=None: isinstance(x, list) and (x[0] == 'REMOTE_ERROR' or ((module, method) == ('command', 'run') and x[0] != 0))
 
