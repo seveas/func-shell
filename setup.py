@@ -25,7 +25,7 @@ class my_clean(clean):
             os.unlink('fsh')
 
 setup(name="func-shell",
-    version="1.0",
+    version="1.1",
     author="Dennis Kaarsemaker",
     author_email="dennis@kaarsemaker.net",
     url="http://github.com/seveas/func-shell",
@@ -42,6 +42,4 @@ setup(name="func-shell",
         'Topic :: Software Development :: Interpreters',
         'Topic :: System :: Systems Administration',
     ],
-    # Requires func too, but the version on PyPI is ancient
-    install_requires=["pyparsing>=1.5.6"],
 )

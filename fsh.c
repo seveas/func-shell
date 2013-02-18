@@ -10,8 +10,8 @@
 #include <string.h>
 
 int main(int argc, char **argv, char **envp) {
-    char *buf = malloc(strlen(argv[0]) + 4);
-    strcpy(buf, argv[0]);
+    char buf[BUFSIZ];
+    readlink("/proc/self/exe", buf, BUFSIZ);
     strcat(buf + strlen(buf), ".py");
     execve(buf, argv, envp);
     perror("exec failed:");

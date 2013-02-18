@@ -168,7 +168,7 @@ class FuncShell(object):
         quiet = line[0] == '@' and line.pop(0)
         if len(line) != 3:
             raise RuntimeError("Internal error")
-        args = eval(''.join(line[2]))
+        args = eval(''.join(line[2])[:-1] + ",)")
         return self.run(line[0], line[1], args, quiet)
 
     def run_shell_command(self, line):
@@ -187,12 +187,40 @@ class FuncShell(object):
             if len(args) != 2 or not args[1].isdigit():
                 print >>sys.stderr, args[0] + " requires an integer value"
             setattr(self, args[0], int(args[1]))
-        elif args[0] == '+x':
-            self.verbose = True
         elif args[0] == '-x':
+            self.verbose = True
+        elif args[0] == '+x':
             self.verbose = False
         else:
             print >>sys.stderr, "Unrecognized variable: %s" % args[0]
+
+    def run_quit(self, args):
+        raise SystemExit()
+
+    def run_exit(self, args):
+        raise SystemExit()
+
+    def run_help(self, args):
+        print """Func shell 1.1
+
+Basic commands:
+   ?            Displays current settings
+   = hostspec   Sets the hosts to use
+   + hostspec   Adds to the hosts
+   - hostspec   Removes from the hosts
+   ? hostspec   See what matches the hostspec
+
+   hostspecs can be hostnames, globs or filters that match the output of the
+   last commands run.
+
+Calling func methods:
+
+   module.method(args)
+
+Running shell commands:
+
+   command arg1 arg2 arg3
+"""
 
     def run(self, module, method, args, quiet):
         if not self.hosts:
@@ -219,7 +247,7 @@ class FuncShell(object):
 
     def display_result(self, module, method, res):
         l = max([len(x) for x in res])
-        width = self.get_columns
+        width = self.get_columns()
         for host, out in sorted(res.items()):
             print wrap(host, attr.bright, (is_error(out, module, method) and fgcolor.red or fgcolor.green))
             if is_error(out):

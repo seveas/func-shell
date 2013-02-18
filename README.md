@@ -13,6 +13,14 @@ goes like this:
 - On machines where it's wrong, run a command to fix it
 - Lather, rinse repeat
 
+Installing
+----------
+This package requires func, which is not installable from PyPI, and pyparsing
+(which is). Once func is installed and configured, installing func-shell is as
+simple as:
+
+    $ pip install pyparsing func-shell
+
 Example
 -------
 
