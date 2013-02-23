@@ -273,7 +273,10 @@ Running shell commands:
         for host, out in sorted(res.items()):
             print wrap(host, attr.bright, (is_error(out, module, method) and fgcolor.red or fgcolor.green))
             if is_error(out):
-                print "%s\n%s: %s" % (out[3].rstrip(), out[1], out[2])
+                if out[1] == 'socket.timeout':
+                    print "Func timeout, command is still running"
+                else:
+                    print "%s\n%s: %s" % (out[3].rstrip(), out[1], out[2])
             elif (module, method) == ('command', 'run'):
                 print "Exitcode: %d\n%s\n%s\n%s\n%s" % (out[0], '-' * 20, out[1].rstrip(), '-' * 20, out[2].rstrip())
             else:
