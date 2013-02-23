@@ -151,7 +151,7 @@ class FuncShell(object):
             return set(self.last_ok)
         if query == '$failed':
             return self.hosts - self.last_ok
-        if '==' in query:
+        if '==' in query or '!=' in query:
             query = eval('lambda x: ' + query)
             try:
                 return set([x for x in self.last_result if query(self.last_result[x])])
@@ -163,6 +163,14 @@ class FuncShell(object):
             rx = re.compile(query[query.find('=~')+2:])
             try:
                 return set([x for x in self.last_result if rx.search(getval(self.last_result[x]))])
+            except Exception, e:
+                print str(e)
+                return set()
+        if '!~' in query:
+            getval = eval('lambda x: ' + query[:query.find('!~')])
+            rx = re.compile(query[query.find('!~')+2:])
+            try:
+                return set([x for x in self.last_result if not rx.search(getval(self.last_result[x]))])
             except Exception, e:
                 print str(e)
                 return set()

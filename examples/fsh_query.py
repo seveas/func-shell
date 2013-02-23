@@ -16,7 +16,7 @@ sys.path.insert(0, '/opt/sysadmin')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'serverdb2.settings'
 
 def hostq(grammar):
-    query = pp.Group(grammar.ident + ((pp.Literal('==')  + grammar.val) | (pp.Literal('=~') + grammar.re_)))
+    query = pp.Group(grammar.ident + ((pp.oneOf('== !=')  + grammar.val) | (pp.oneOf('=~ !~') + grammar.re_)))
     return query
 
 def query(query):
@@ -30,6 +30,10 @@ def query(query):
     from serverdb2.servers.models import Server
     if op == '==':
         servers = Server.objects.filter(**{attr: eval(val)})
+    elif op == '!=':
+        servers = Server.objects.exclude(**{attr: eval(val)})
     elif op == '=~':
         servers = Server.objects.filter(**{attr + '__regex': val})
+    elif op == '!~':
+        servers = Server.objects.exclude(**{attr + '__regex': val})
     return set(servers.distinct().values_list('name', flat=True))
