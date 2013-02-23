@@ -300,7 +300,7 @@ class FuncShellGrammar(object):
         num    = int_ | real_
         str_   = pp.quotedString
         self.re_ = re_ = pp.QuotedString(quoteChar='/', escChar='\\')
-        singletons = pp.Keyword("None") | pp.Keyword("True") | pp.keyword("False")
+        singletons = pp.Keyword("None") | pp.Keyword("True") | pp.Keyword("False")
         const  = num | str_ | singletons
         self.ident = ident = pp.Word(pp.srange("[a-zA-Z_]"), pp.srange("[a-zA-Z0-9_]"))
 
