@@ -223,7 +223,7 @@ class FuncShell(object):
         raise SystemExit()
 
     def run_help(self, args):
-        print """Func shell 1.1
+        print """Func shell 1.3
 
 Basic commands:
    ?            Displays current settings
