@@ -155,6 +155,14 @@ class FuncShell(object):
             return set(self.last_ok)
         if query == '$failed':
             return self.hosts - self.last_ok
+        if query.startswith('<'):
+            fname = query[1:]
+            if not os.path.exists(fname):
+                print "No such file: %s" % fname
+                return set()
+            with open(fname) as fd:
+                query = ';'.join(set([x.strip() for x in fd.read().strip().splitlines()]))
+
         if '==' in query or '!=' in query:
             query = eval('lambda x: ' + query)
             try:
@@ -324,13 +332,14 @@ class FuncShellGrammar(object):
         # Admin commands
         results = pp.Literal('$ok') | pp.Literal('$failed')
         hname  = pp.Word(pp.srange("[-a-zA-Z0-9_*]"))
+        fname  = pp.Word(pp.srange("[-_a-zA-Z0-9.+/=~ ]"))
         fqdn   = pp.Group(hname + pp.ZeroOrMore(pp.Literal('.') + hname))
         attr   = pp.Literal('.') + ident
         elt    = pp.Literal('[') + const + pp.Literal(']')
         expr   = pp.Group(pp.Literal('x') + pp.ZeroOrMore(attr|elt) + (pp.Literal('==') + val | pp.Literal('=~') + re_))
-        hostq = (results | expr | str_ | num | fqdn)
+        hostq  = (results | expr | str_ | num | fqdn | pp.Group(pp.Literal('<') + fname))
         if fsh_query:
-            hostq = (fsh_query.hostq(self) | results | expr | str_ | num | fqdn)
+            hostq = (fsh_query.hostq(self) | results | expr | str_ | num | fqdn | pp.Group(pp.Literal('<') + fname))
         self.admin = (pp.Literal('?') + pp.Optional(hostq) | pp.oneOf('= + -') + hostq) + pp.LineEnd()
 
 is_error = lambda x, module=None, method=None: isinstance(x, list) and (x[0] == 'REMOTE_ERROR' or ((module, method) == ('command', 'run') and x[0] != 0))

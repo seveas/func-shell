@@ -84,11 +84,15 @@ The list of hosts
  - `? [hostspec]` (display the expansion of `hostspec`, or the current hosts)
 
 These commands all manipulate the list of hosts that subsequent commands run
-on. A `hostspec` can take 2 forms: a hostname or glob, such as:
+on. A `hostspec` can take 3 forms: a hostname or glob, such as:
 
     = dbserver-*
     + webapp-*.*
     - webapp-101.kaarsemaker.net
+
+A filename that contains a list of hosts, one per line:
+
+    + < hostlist.txt
 
 Or a filter expression that matches the results of the last executed command:
 
