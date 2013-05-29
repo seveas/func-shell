@@ -40,6 +40,7 @@ class FuncShell(object):
         self.hosts = set()
         self.parallel = 50
         self.timeout = 10
+        self.dtimeout = 60
         self.verbose = opts.verbose
         self.ps4 = os.environ.get('PS4', '+ ')
         self.files = [hasattr(f, 'readline') and ('-', f, 0) or (f, open(f), 0) for f in files]
@@ -139,6 +140,7 @@ class FuncShell(object):
             pprint.pprint(sorted(self.hosts), width=self.get_columns())
             print "Running commands on %d/%d hosts(s) in parallel" % (min(self.parallel, len(self.hosts)), len(self.hosts))
             print "Timeout: %d seconds" % (self.timeout,)
+            print "Delegation timeout: %d seconds" % (self.dtimeout,)
             return
 
         if len(line) != 2:
@@ -227,7 +229,7 @@ class FuncShell(object):
         if not args:
             print >>sys.stderr, "Usage: set <param> [<val>]"
             return
-        if args[0] in ('timeout', 'parallel'):
+        if args[0] in ('timeout', 'dtimeout', 'parallel'):
             if len(args) != 2 or not args[1].isdigit():
                 print >>sys.stderr, args[0] + " requires an integer value"
             setattr(self, args[0], int(args[1]))
@@ -272,7 +274,7 @@ Running shell commands:
             return
 
         try:
-            client = Overlord(';'.join(self.hosts), delegate=os.path.exists(DEFAULT_MAPLOC), timeout=self.timeout, nforks = self.parallel)
+            client = Overlord(';'.join(self.hosts), delegate=os.path.exists(DEFAULT_MAPLOC), timeout=self.timeout, delegation_timeout=self.dtimeout, nforks = self.parallel)
             module_ = getattr(client, module)
             method_ = getattr(module_, method)
             self.last_result = res = method_(*args)
