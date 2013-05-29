@@ -51,6 +51,10 @@ class FuncShell(object):
         do_readline = sys.stdin.isatty() and ('-', sys.stdin) in self.files
         if do_readline and os.path.exists(os.path.expanduser('~/.fsh_history')):
             readline.read_history_file(os.path.expanduser('~/.fsh_history'))
+            for file in ('/etc/inputrc', os.path.expanduser('~/.inputrc')):
+                if os.path.exists(file):
+                    with open(file) as fd:
+                        readline.parse_and_bind(fd.read())
 
         for file in self.files:
             self.curfile = file[0]
