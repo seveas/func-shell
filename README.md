@@ -65,11 +65,12 @@ more concise syntax and easier to understand output.
 
 Syntax
 ------
-There are 4 types of input:
+There are 5 types of input:
 
-- Commands to modify the list of hosts
+- Commands to modify the list of hosts, or fsh settings
 - Calls to func modules, such as test.ping()
 - Shell commands to be executed via the command module
+- Sourcing another file with commands
 - Comments, which are lines starting with a # character (leading whitespace is
   allowed and ignored)
 
@@ -147,6 +148,12 @@ with an @ sign. To see what's in `/srv/www`, if it exists:
     @test -e /srv/www
     - $failed
     ls -la /srv/www | grep html
+
+Sourcing another file
+---------------------
+Like regular shells, you can source another file with the `.` command:
+
+    . more_commands.fsh
 
 Examples
 --------

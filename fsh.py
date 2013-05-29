@@ -42,7 +42,7 @@ class FuncShell(object):
         self.timeout = 10
         self.verbose = opts.verbose
         self.ps4 = os.environ.get('PS4', '+ ')
-        self.files = [hasattr(f, 'readline') and ('-', f) or (f, open(f)) for f in files]
+        self.files = [hasattr(f, 'readline') and ('-', f, 0) or (f, open(f), 0) for f in files]
         self.last_result = {}
         self.last_ok = set()
         self.grammar = FuncShellGrammar()
@@ -56,14 +56,14 @@ class FuncShell(object):
                     with open(file) as fd:
                         readline.parse_and_bind(fd.read())
 
-        for file in self.files:
-            self.curfile = file[0]
-            self.curline = 0
+        while self.files:
+            self.curfile, self.curfd, self.curline = self.files[0]
+            self.files = self.files[1:]
             if self.verbose:
-                print "%s(Now processing %s)" % (self.ps4, file[0])
+                print "%s(Now processing %s)" % (self.ps4, self.curfile)
             try:
                 while True:
-                    line = self.get_input(file[1])
+                    line = self.get_input()
                     if not line:
                         break
                     if self.verbose:
@@ -78,23 +78,23 @@ class FuncShell(object):
         if do_readline:
             readline.write_history_file(os.path.expanduser('~/.fsh_history'))
 
-    def get_input(self, file):
+    def get_input(self):
         while True:
             self.curline += 1
             try:
-                if file.isatty():
+                if self.curfd.isatty():
                     line = raw_input('fsh> ')
                 else:
-                    line = file.readline()
+                    line = self.curfd.readline()
             except KeyboardInterrupt:
                 print >>sys.stderr, "KeyboardInterrupt (Use ^D or exit to exit)"
                 continue
             except EOFError:
-                if file.isatty():
+                if self.curfd.isatty():
                     print ""
                 break
             if line == '':
-                if not file.isatty():
+                if not self.curfd.isatty():
                     break
             if not line or line.startswith('#'):
                 continue
@@ -103,6 +103,16 @@ class FuncShell(object):
             return line
 
     def parse_and_run(self, line):
+        try:
+            line = self.grammar.source.parseString(line)
+            self.files.insert(0, (self.curfile, self.curfd, self.curline))
+            self.curfile = line[1]
+            self.curfd = open(self.curfile)
+            self.curline = 0
+            return
+        except pyparsing.ParseException:
+            pass
+
         try:
             line = self.grammar.admin.parseString(line)
             return self.run_admin_command(line)
@@ -341,6 +351,8 @@ class FuncShellGrammar(object):
         if fsh_query:
             hostq = (fsh_query.hostq(self) | results | expr | str_ | num | fqdn | pp.Group(pp.Literal('<') + fname))
         self.admin = (pp.Literal('?') + pp.Optional(hostq) | pp.oneOf('= + -') + hostq) + pp.LineEnd()
+
+        self.source = pp.Literal('.') + fname
 
 is_error = lambda x, module=None, method=None: isinstance(x, list) and (x[0] == 'REMOTE_ERROR' or ((module, method) == ('command', 'run') and x[0] != 0))
 
