@@ -20,7 +20,7 @@ def hostq(grammar):
     return query
 
 def query(query):
-    if isinstance(query, str) or len(query) != 3:
+    if isinstance(query, str) or len(query) != 3 or query[1] not in ('==', '!=', '=~', '!~'):
         return None
 
     attr, op, val = query
