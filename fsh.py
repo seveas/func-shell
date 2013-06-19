@@ -338,7 +338,7 @@ class FuncShellGrammar(object):
 
         # Function call or shell command
         self.call = pp.Optional('@') + ident + pp.Literal('.').suppress() + ident + pp.Group(tuple_) + pp.LineEnd()
-        shell     = pp.Word(pp.srange("[-_a-zA-Z0-9.+/=~|;&:]"))
+        shell     = pp.Word(pp.srange("[-_a-zA-Z0-9.+/=~|;&:<>]"))
         self.command = pp.Optional('@') + pp.OneOrMore(str_ | shell) + pp.LineEnd()
 
         # Admin commands
