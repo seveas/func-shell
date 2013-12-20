@@ -160,7 +160,7 @@ class FuncShell(object):
         if fsh_query:
             ret = fsh_query.query(query)
             if ret is not None:
-                query = ';'.join(ret)
+                return ret
         if not isinstance(query, str):
             query = ''.join(query)
         if query == '$ok':
