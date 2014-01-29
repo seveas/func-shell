@@ -25,7 +25,7 @@ class my_clean(clean):
             os.unlink('fsh')
 
 setup(name="func-shell",
-    version="1.4",
+    version="1.5",
     author="Dennis Kaarsemaker",
     author_email="dennis@kaarsemaker.net",
     url="http://github.com/seveas/func-shell",

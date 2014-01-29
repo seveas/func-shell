@@ -16,6 +16,7 @@ import readline
 import struct
 import sys
 import termios
+import whelk
 
 # Support for custom host queries can go in here
 try:
@@ -128,12 +129,14 @@ class FuncShell(object):
 
         try:
             line = self.grammar.command.parseString(line)
+            # Instead of trying to parse sh syntax, let bash do that.
+            check = whelk.shell.bash('-nc', line[line[0] == '@' and 1 or 0])
+            if check.returncode != 0:
+                raise pyparsing.ParseException("Not a shell command: %s" % check.stderr.strip())
             return self.run_shell_command(line)
         except pyparsing.ParseException:
-            pass
-
-        print >>sys.stderr, "Unrecognized input: %s" % line
-        return
+            e = sys.exc_info()[1]
+            print >>sys.stderr, "Unrecognized input: %s\n%s" % (line, str(e))
 
     def run_admin_command(self, line):
         if len(line) == 1 and line[0]  == '?':
@@ -338,8 +341,8 @@ class FuncShellGrammar(object):
 
         # Function call or shell command
         self.call = pp.Optional('@') + ident + pp.Literal('.').suppress() + ident + pp.Group(tuple_) + pp.LineEnd()
-        shell     = pp.Word(pp.srange("[-_a-zA-Z0-9.+/=~|;&:<>*]"))
-        self.command = pp.Optional('@') + pp.OneOrMore(str_ | shell) + pp.LineEnd()
+        # Accept everything as shell command, is checked with bash later
+        self.command = pp.Optional('@') + pp.Regex('.*') + pp.LineEnd()
 
         # Admin commands
         results = pp.Literal('$ok') | pp.Literal('$failed')
