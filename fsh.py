@@ -13,16 +13,18 @@ import pprint
 import pyparsing
 import re
 import readline
+import socket
 import struct
 import sys
 import termios
-import whelk
 
 # Support for custom host queries can go in here
 try:
     import fsh_query
 except ImportError:
     fsh_query = None
+
+overlord = Overlord(socket.getfqdn(), delegate=os.path.exists(DEFAULT_MAPLOC))
 
 def shell():
     p = optparse.OptionParser(usage="%prog [opts] [scripts]")
@@ -129,14 +131,12 @@ class FuncShell(object):
 
         try:
             line = self.grammar.command.parseString(line)
-            # Instead of trying to parse sh syntax, let bash do that.
-            check = whelk.shell.bash('-nc', line[line[0] == '@' and 1 or 0])
-            if check.returncode != 0:
-                raise pyparsing.ParseException("Not a shell command: %s" % check.stderr.strip())
             return self.run_shell_command(line)
         except pyparsing.ParseException:
-            e = sys.exc_info()[1]
-            print >>sys.stderr, "Unrecognized input: %s\n%s" % (line, str(e))
+            pass
+
+        print >>sys.stderr, "Unrecognized input: %s" % line
+        return
 
     def run_admin_command(self, line):
         if len(line) == 1 and line[0]  == '?':
@@ -204,7 +204,8 @@ class FuncShell(object):
 
         # And now we finally get to the func map
         try:
-            return set(Overlord(query, delegate=os.path.exists(DEFAULT_MAPLOC)).list_minions())
+            overlord.server_spec = query
+            return set(overlord.list_minions())
         except Exception, e:
             print str(e)
             return set()
@@ -341,8 +342,8 @@ class FuncShellGrammar(object):
 
         # Function call or shell command
         self.call = pp.Optional('@') + ident + pp.Literal('.').suppress() + ident + pp.Group(tuple_) + pp.LineEnd()
-        # Accept everything as shell command, is checked with bash later
-        self.command = pp.Optional('@') + pp.Regex('.*') + pp.LineEnd()
+        shell     = pp.Word(pp.srange("[-_a-zA-Z0-9.+/=~|;&:<>*]"))
+        self.command = pp.Optional('@') + pp.OneOrMore(str_ | shell) + pp.LineEnd()
 
         # Admin commands
         results = pp.Literal('$ok') | pp.Literal('$failed')
